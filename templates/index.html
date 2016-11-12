@@ -1,0 +1,40 @@
+<html>
+  <style>
+    body{ 
+      font-size: 15pt;
+      font-family: arial;
+    }
+  </style>
+
+
+<body>
+
+  <h1 align="center">GULP</h1>
+
+  {% if not error_email and not error_password %}
+    {% if not user %}
+        <form method="POST" action="/login">
+          Email: <input type="text" name="email"><br>
+          Password: <input type="password" name="password"><br>
+          <input type="submit" value="Login">
+        </form>
+    {% else %}
+        <p>Hello {{user}}!</p>
+    {% endif %}
+  {% endif %}
+
+  {% if error_email %}
+    <p>{{error_email}}</p>
+    <form method="POST" action="/register">
+          Name: <input type="text" name="name"><br>
+          Phone: <input type="text" name="phone"><br>
+          Email: <input type="text" name="email"><br>
+          Password: <input type="password" name="password"><br>
+          <input type="submit" value="Sign Up">
+    </form>
+  {% endif %}
+
+</body>
+
+
+</html>
