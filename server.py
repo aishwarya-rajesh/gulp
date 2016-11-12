@@ -75,7 +75,7 @@ def index():
 def login():
     email = '' if request.form['email'] is None else request.form['email']
     password = '' if request.form['password'] is None else request.form['password']
-    cmd = """SELECT p.name, c.password, c.email FROM "Person" p NATURAL JOIN "Customer" c WHERE c.email=%s;"""
+    cmd = """SELECT p.name, c.password, c.pid FROM "Person" p NATURAL JOIN "Customer" c WHERE c.email=%s;"""
     cursor = g.conn.execute(cmd, (email,))
     record = cursor.first()
     if not record:
@@ -84,7 +84,7 @@ def login():
         if not record[1] == password:
             context = dict(error_password='Incorrect password, try again.')
         else:
-            context = dict(user=record[0])
+            context = dict(user=record[0], uid=record[2])
 
     return render_template('index.html', **context)
 
@@ -115,9 +115,7 @@ def register():
 
     g.conn.execute(cmd, (name, phone, email, password))
 
-    context = dict(user=name)
-
-    return render_template('index.html', **context)
+    return redirect('/')
 
 
 @app.route('/menu')
@@ -168,6 +166,56 @@ def display_feedback():
     cursor.close()
 
     return render_template("feedback.html", **context)
+
+
+@app.route('/orders/<uid>')
+def view_orders(uid):
+
+    cursor = g.conn.execute("""SELECT * FROM "Order_Delivery_Person" NATURAL JOIN
+                                (SELECT oid, date, delivery_address, status, type, number
+                                FROM "Order" NATURAL JOIN "Card" c
+                                WHERE cust_id=%s ORDER BY date DESC) AS "Order" """, (uid,))
+    orders = []
+    for result in cursor:
+        order = {}
+        order['oid'] = result['oid']
+        order['date'] = result['date']
+        order['address'] = result['delivery_address']
+        order['status'] = result['status']
+        order['card_details'] = {
+            'type': result['type'],
+            'number': 'XXXX-XXXX-XXXX-'+str(result['number'])[12:]
+        }
+        order_cursor = g.conn.execute("""SELECT name, price, quantity, price*quantity AS item_total
+                                            FROM "Order_Item" NATURAL JOIN "Item" WHERE oid=%s;""", (result['oid'], ))
+        order_subtotal = 0.0
+        order['item_details'] = []
+
+        for item in order_cursor:
+            item_details = {}
+            item_details['name'] = item['name']
+            item_details['price'] = item['price']
+            item_details['quantity'] = item['quantity']
+            item_details['item_total'] = item['item_total']
+            order['item_details'].append(item_details)
+            order_subtotal += float(item['item_total'])
+
+        order['subtotal'] = order_subtotal
+        order['tip'] = result['tip']
+        order['tax'] = float('%.2f' % (0.1*order_subtotal))
+        order['delivery_fee'] = 5.0
+        order['total'] = order_subtotal + float(order['tip']) + order['tax'] + order['delivery_fee']
+
+        order_cursor = g.conn.execute("""SELECT name FROM "Person" WHERE pid=%s;""", (result['did'],))
+        order['delivery_person'] = order_cursor.first()['name']
+
+        orders.append(order)
+        order_cursor.close()
+
+    context = dict(orders=orders)
+    cursor.close()
+
+    return render_template("orders.html", **context)
 
 
 if __name__ == "__main__":

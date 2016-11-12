@@ -20,8 +20,9 @@
         </form>
     {% else %}
         <p>Hello {{user}}!</p>
-        <a href="/menu">What's on the Menu!</a></br>
-        <a href="/reviews">Reviews</a>
+        <a href="/menu">What's on the Menu!</a><br>
+        <a href="/reviews">Reviews</a><br>
+        <a href="/orders/{{uid}}">My Orders</a>
     {% endif %}
   {% endif %}
 

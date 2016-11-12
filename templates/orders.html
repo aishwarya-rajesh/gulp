@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Orders</title>
+</head>
+<body>
+
+    <h1 align="center">Order History</h1>
+
+    <table>
+        <tr>
+            <th>Order #</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Delivery</th>
+            <th>Card Details</th>
+            <th>Order Details</th>
+            <th>Subtotal</th>
+            <th>Other Charges</th>
+            <th>Order Total</th>
+        </tr>
+        {% for order in orders %}
+            <tr>
+                <td>{{order.oid}}</td>
+                <td>{{order.status}}</td>
+                <td>{{order.date}}</td>
+                <td>
+                    Delivered to: {{order.address}}<br>
+                    Delivered by: {{order.delivery_person}}
+                </td>
+                <td>
+                    {{order.card_details.type}}<br>
+                    {{order.card_details.number}}
+                </td>
+                <td>
+                    <table>
+                        <tr>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Total</th>
+                        </tr>
+                        {% for item in order.item_details %}
+                            <tr>
+                                <td>{{item.name}}</td>
+                                <td>{{item.price}}</td>
+                                <td>{{item.quantity}}</td>
+                                <td>{{item.item_total}}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </td>
+                <td>{{order.subtotal}}</td>
+                <td>
+                    Tax: {{order.tax}}<br>
+                    Tip: {{order.tip}}<br>
+                    Delivery Fee: {{order.delivery_fee}}
+                </td>
+                <td>{{order.total}}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>
