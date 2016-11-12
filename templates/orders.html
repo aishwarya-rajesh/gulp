@@ -9,9 +9,8 @@
     {% if orders %}
     <h1 align="center">Order History</h1>
 
-    <table>
+    <table class="table table-bordered">
         <tr>
-            <th>Order #</th>
             <th>Status</th>
             <th>Date</th>
             <th>Delivery</th>
@@ -22,8 +21,8 @@
             <th>Order Total</th>
         </tr>
         {% for order in orders %}
+            <tr><td colspan="8"><h3>Order #{{order.oid}}</h3></td></tr>
             <tr>
-                <td>{{order.oid}}</td>
                 <td>{{order.status}}</td>
                 <td>{{order.date}}</td>
                 <td>

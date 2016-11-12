@@ -12,11 +12,11 @@
 </head>
 <body>
     {% block content %}
-        <h1 align="center">Reviews  <i class="fa fa-plus-square"></i></h1>
+        <h1 align="center">Reviews</i></h1>
         <p align="center">
             <img src= {{url_for('static', filename = 'images/star.png')}} height="20" width="20">{{avgRating}}
         </p>
-        <table>
+        <table class="table">
             {% for review in feedback %}
                 <tr><td colspan="3">{{review['review']}}</td></tr>
                 <tr class="subheading">
@@ -25,6 +25,7 @@
                         {{review['rating']}}</td>
                     <td>{{review['date']}}</td>
                 </tr>
+                <tr></tr>
             {% endfor %}
         </table>
     {% endblock %}

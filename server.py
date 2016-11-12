@@ -83,14 +83,15 @@ def login():
         record = cursor.first()
         if not record:
             context = dict(error_email='Invalid user email. Please sign up.')
+            return render_template("index.html", **context)
         else:
             if not record[1] == password:
                 context = dict(error_password='Incorrect password, try again.')
+                return render_template("index.html", **context)
             else:
                 session['user'] = record[0]
                 session['uid'] = record[2]
-
-        return redirect('/')
+                return redirect('/')
 
     else:
         context = dict(login=True)
@@ -194,13 +195,13 @@ def view_orders(uid):
 
         cursor = g.conn.execute("""SELECT * FROM "Order_Delivery_Person" NATURAL JOIN
                                     (SELECT oid, date, delivery_address, status, type, number
-                                    FROM "Order" NATURAL JOIN "Card" c
+                                    FROM "Order" NATURAL JOIN "Card"
                                     WHERE cust_id=%s ORDER BY date DESC) AS "Order" """, (uid,))
         orders = []
         for result in cursor:
             order = {}
             order['oid'] = result['oid']
-            order['date'] = result['date']
+            order['date'] = str(result['date']).split(' ')[0]
             order['address'] = result['delivery_address']
             order['status'] = result['status']
             order['card_details'] = {

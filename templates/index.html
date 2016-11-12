@@ -8,16 +8,22 @@
         .form-group{
 	        margin-bottom: 15px;
         }
+        p{
+            color: red;
+        }
       </style>
 <body>
 
     {% block content %}
-        {% if login %}
+        {% if login or error_password %}
 
             <div class="container">
 			<div>
 				<div class="panel-heading">
 	               <div class="panel-title text-center">
+                        {% if error_password %}
+                            <p>{{error_password}}</p>
+                        {% endif %}
 	               		<h3 class="title">Login</h3>
 	               		<hr />
 	               	</div>
@@ -54,11 +60,15 @@
 			    </div>
 		    </div>
 
-        {% elif register %}
+        {% elif register or error_email%}
+
             <div class="container">
 			<div>
 				<div class="panel-heading">
 	               <div class="panel-title text-center">
+                        {% if error_email %}
+                            <p>{{error_email}}</p>
+                        {% endif %}
 	               		<h3 class="title">Sign Up!</h3>
 	               		<hr />
 	               	</div>
