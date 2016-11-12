@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Menu</title>
+</head>
+<body>
+    <h1 align="center">Menu</h1>
+    <table>
+        {% for category, items in menu.items() %}
+            <tr><td colspan="2"><h1>{{category}}</h1></td></tr>
+            {% for item in items %}
+                <tr><td colspan="2"><h3>{{item['name']}}</h3></td></tr>
+                <tr>
+                    <td>{{item['desc']}}</td>
+                    <td>{{item['price']}}</td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+    </table>
+</body>
+</html>

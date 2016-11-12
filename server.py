@@ -15,24 +15,12 @@ from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect, Response
 
+from collections import OrderedDict
+
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
 
 
-#
-# The following uses the postgresql test.db -- you can use this for debugging purposes
-# However for the project you will need to connect to your Part 2 database in order to use the
-# data
-#
-# XXX: The URI should be in the format of: 
-#
-#     postgresql://USER:PASSWORD@<IP_OF_POSTGRE_SQL_SERVER>/postgres
-#
-# For example, if you had username ewu2493, password foobar, then the following line would be:
-#
-#     DATABASEURI = "postgresql://ewu2493:foobar@<IP_OF_POSTGRE_SQL_SERVER>/postgres"
-#
-# Swap out the URI below with the URI for the database created in part 2
 DATABASEURI = "postgresql://ar3567:39xbn@104.196.175.120/postgres"
 
 
@@ -40,33 +28,6 @@ DATABASEURI = "postgresql://ar3567:39xbn@104.196.175.120/postgres"
 # This line creates a database engine that knows how to connect to the URI above
 #
 engine = create_engine(DATABASEURI)
-
-
-#
-# START SQLITE SETUP CODE
-#
-# after these statements run, you should see a file test.db in your webserver/ directory
-# this is a sqlite database that you can query like psql typing in the shell command line:
-# 
-#     sqlite3 test.db
-#
-# The following sqlite3 commands may be useful:
-# 
-#     .tables               -- will list the tables in the database
-#     .schema <tablename>   -- print CREATE TABLE statement for table
-# 
-# The setup code should be deleted once you switch to using the Part 2 postgresql database
-#
-# engine.execute("""DROP TABLE IF EXISTS test;""")
-# engine.execute("""CREATE TABLE IF NOT EXISTS test (
-#   id serial,
-#   name text
-# );""")
-# engine.execute("""INSERT INTO test(name) VALUES ('grace hopper'), ('alan turing'), ('ada lovelace');""")
-#
-# END SQLITE SETUP CODE
-#
-
 
 
 @app.before_request
@@ -97,19 +58,6 @@ def teardown_request(exception):
         pass
 
 
-#
-# @app.route is a decorator around index() that means:
-#   run index() whenever the user tries to access the "/" path using a GET request
-#
-# If you wanted the user to go to e.g., localhost:8111/foobar/ with POST or GET then you could use
-#
-#       @app.route("/foobar/", methods=["POST", "GET"])
-#
-# PROTIP: (the trailing / in the path is important)
-# 
-# see for routing: http://flask.pocoo.org/docs/0.10/quickstart/#routing
-# see for decorators: http://simeonfranklin.com/blog/2012/jul/1/python-decorators-in-12-steps/
-#
 @app.route('/')
 def index():
     """
@@ -120,22 +68,7 @@ def index():
     See its API: http://flask.pocoo.org/docs/0.10/api/#incoming-request-data
     """
 
-    # DEBUG: this is debugging code to see what request looks like
-    # print request.args
-
-    # render_template looks in the templates/ folder for files.
-    # for example, the below file reads template/index.html
-    #
     return render_template("index.html")
-
-#
-# This is an example of a different path.  You can see it at
-# 
-#     localhost:8111/another
-#
-# notice that the function name is another() rather than index()
-# the functions for each app.route needs to have different names
-#
 
 
 @app.route('/login', methods=['POST'])
@@ -185,6 +118,37 @@ def register():
     context = dict(user=name)
 
     return render_template('index.html', **context)
+
+
+@app.route('/menu')
+def display_menu():
+
+    cursor = g.conn.execute('SELECT * FROM "Item";')
+    menu_items = OrderedDict([
+        ('Starters', []),
+        ('Soups and Salads', []),
+        ('Rice', []),
+        ('Breads', []),
+        ('Vegetables', []),
+        ('Chicken', []),
+        ('Lamb', []),
+        ('Seafood', []),
+        ('Tandoori Specialties', []),
+        ('Sides', []),
+        ('Desserts', [])
+    ])
+    for result in cursor:
+        item = {}
+        item['name'] = result['name']
+        item['desc'] = result['description']
+        item['price'] = result['price']
+        menu_items[result['category']].append(item)
+    cursor.close()
+
+    context = dict(menu=menu_items)
+
+    return render_template("menu.html", **context)
+
 
 if __name__ == "__main__":
     import click
