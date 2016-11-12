@@ -1,30 +1,122 @@
+{% extends "base.html" %}
 <html>
-  <style>
-    body{ 
-      font-size: 15pt;
-      font-family: arial;
-    }
-  </style>
-
-
+      <style>
+        body{
+          font-size: 15pt;
+          font-family: arial;
+        }
+        .form-group{
+	        margin-bottom: 15px;
+        }
+      </style>
 <body>
 
-  <h1 align="center">GULP</h1>
+    {% block content %}
+        {% if login %}
 
-  {% if not error_email and not error_password %}
-    {% if not user %}
-        <form method="POST" action="/login">
-          Email: <input type="text" name="email"><br>
-          Password: <input type="password" name="password"><br>
-          <input type="submit" value="Login">
-        </form>
-    {% else %}
-        <p>Hello {{user}}!</p>
-        <a href="/menu">What's on the Menu!</a><br>
-        <a href="/reviews">Reviews</a><br>
-        <a href="/orders/{{uid}}">My Orders</a>
-    {% endif %}
-  {% endif %}
+            <div class="container">
+			<div>
+				<div class="panel-heading">
+	               <div class="panel-title text-center">
+	               		<h3 class="title">Login</h3>
+	               		<hr />
+	               	</div>
+	            </div>
+				<div class="col-md-4 col-md-offset-4">
+					<form method="post" action="/login">
+
+						<div class="form-group">
+							<label for="email" class="cols-sm-2 control-label">Email</label>
+							<div class="cols-sm-10">
+								<div class="input-group">
+									<span class="input-group-addon"><i class="fa fa-envelope fa" aria-hidden="true"></i></span>
+									<input type="text" class="form-control" name="email"  placeholder="Enter your Email"/>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label for="password" class="cols-sm-2 control-label">Password</label>
+							<div class="cols-sm-10">
+								<div class="input-group">
+									<span class="input-group-addon"><i class="fa fa-lock fa-lg" aria-hidden="true"></i></span>
+									<input type="password" class="form-control" name="password"  placeholder="Enter your Password"/>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group ">
+							<input type="submit" class="btn btn-primary btn-lg btn-block login-button" value="Login">
+						</div>
+
+					</form>
+				</div>
+			    </div>
+		    </div>
+
+        {% elif register %}
+            <div class="container">
+			<div>
+				<div class="panel-heading">
+	               <div class="panel-title text-center">
+	               		<h3 class="title">Sign Up!</h3>
+	               		<hr />
+	               	</div>
+	            </div>
+				<div class="col-md-4 col-md-offset-4">
+					<form method="post" action="/register">
+
+						<div class="form-group">
+							<label for="name" class="cols-sm-2 control-label">Name</label>
+							<div class="cols-sm-10">
+								<div class="input-group">
+									<span class="input-group-addon"><i class="fa fa-user fa" aria-hidden="true"></i></span>
+									<input type="text" class="form-control" name="name" id="name"  placeholder="Enter your Name"/>
+								</div>
+							</div>
+						</div>
+
+                        <div class="form-group">
+							<label for="phone" class="cols-sm-2 control-label">Contact Number</label>
+							<div class="cols-sm-10">
+								<div class="input-group">
+									<span class="input-group-addon"><i class="fa fa-users fa" aria-hidden="true"></i></span>
+									<input type="text" class="form-control" name="phone" id="phone"  placeholder="Enter your Contact Number"/>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label for="email" class="cols-sm-2 control-label">Email</label>
+							<div class="cols-sm-10">
+								<div class="input-group">
+									<span class="input-group-addon"><i class="fa fa-envelope fa" aria-hidden="true"></i></span>
+									<input type="text" class="form-control" name="email" id="email"  placeholder="Enter your Email"/>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label for="password" class="cols-sm-2 control-label">Password</label>
+							<div class="cols-sm-10">
+								<div class="input-group">
+									<span class="input-group-addon"><i class="fa fa-lock fa-lg" aria-hidden="true"></i></span>
+									<input type="password" class="form-control" name="password" id="password"  placeholder="Enter your Password"/>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group ">
+							<input type="submit" class="btn btn-primary btn-lg btn-block login-button" value="Register">
+						</div>
+
+					</form>
+				</div>
+			</div>
+		</div>
+
+        {% endif %}
+    {% endblock %}
 
   {% if error_email %}
     <p>{{error_email}}</p>

@@ -1,11 +1,12 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Orders</title>
 </head>
 <body>
-
+    {% block content %}
+    {% if orders %}
     <h1 align="center">Order History</h1>
 
     <table>
@@ -61,6 +62,9 @@
             </tr>
         {% endfor %}
     </table>
-
+    {% else %}
+        {{authentication_error}}
+    {% endif %}
+    {% endblock %}
 </body>
 </html>

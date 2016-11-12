@@ -13,13 +13,14 @@ Read about it online.
 import os
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
-from flask import Flask, request, render_template, g, redirect, Response
+from flask import Flask, request, render_template, g, redirect, session, Response
 
 from collections import OrderedDict
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
 
+app.secret_key = 'F12Zr47j\3yX R~X@H!jmM]Lwf/,?KT'
 
 DATABASEURI = "postgresql://ar3567:39xbn@104.196.175.120/postgres"
 
@@ -71,51 +72,69 @@ def index():
     return render_template("index.html")
 
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['POST', 'GET'])
 def login():
-    email = '' if request.form['email'] is None else request.form['email']
-    password = '' if request.form['password'] is None else request.form['password']
-    cmd = """SELECT p.name, c.password, c.pid FROM "Person" p NATURAL JOIN "Customer" c WHERE c.email=%s;"""
-    cursor = g.conn.execute(cmd, (email,))
-    record = cursor.first()
-    if not record:
-        context = dict(error_email='Invalid user email. Please sign up.')
-    else:
-        if not record[1] == password:
-            context = dict(error_password='Incorrect password, try again.')
+
+    if request.method == 'POST':
+        email = '' if request.form['email'] is None else request.form['email']
+        password = '' if request.form['password'] is None else request.form['password']
+        cmd = """SELECT p.name, c.password, c.pid FROM "Person" p NATURAL JOIN "Customer" c WHERE c.email=%s;"""
+        cursor = g.conn.execute(cmd, (email,))
+        record = cursor.first()
+        if not record:
+            context = dict(error_email='Invalid user email. Please sign up.')
         else:
-            context = dict(user=record[0], uid=record[2])
+            if not record[1] == password:
+                context = dict(error_password='Incorrect password, try again.')
+            else:
+                session['user'] = record[0]
+                session['uid'] = record[2]
 
-    return render_template('index.html', **context)
-
-
-@app.route('/register', methods=['POST'])
-def register():
-    name = request.form['name']
-    phone = long(request.form['phone'])
-    email = request.form['email']
-    password = request.form['password']
-
-    check_cmd = """SELECT email FROM "Customer" WHERE email=%s"""
-    cursor = g.conn.execute(check_cmd, (email,))
-
-    # User email already exists
-    if cursor.first():
         return redirect('/')
 
-    cmd = """
-        WITH new_person AS (
-            INSERT INTO "Person" (name) VALUES (%s)
-            RETURNING pid
-        )
-        INSERT INTO "Customer" (
-            pid, phone, email, password
-        ) VALUES ((SELECT pid from new_person), %s, %s, %s);
-    """
+    else:
+        context = dict(login=True)
+        return render_template('index.html', **context)
 
-    g.conn.execute(cmd, (name, phone, email, password))
 
+@app.route('/logout')
+def logout():
+    session.clear()
     return redirect('/')
+
+
+@app.route('/register', methods=['POST', 'GET'])
+def register():
+
+    if request.method == 'POST':
+        name = request.form['name']
+        phone = long(request.form['phone'])
+        email = request.form['email']
+        password = request.form['password']
+
+        check_cmd = """SELECT email FROM "Customer" WHERE email=%s"""
+        cursor = g.conn.execute(check_cmd, (email,))
+
+        # User email already exists
+        if cursor.first():
+            return redirect('/')
+
+        cmd = """
+            WITH new_person AS (
+                INSERT INTO "Person" (name) VALUES (%s)
+                RETURNING pid
+            )
+            INSERT INTO "Customer" (
+                pid, phone, email, password
+            ) VALUES ((SELECT pid from new_person), %s, %s, %s);
+        """
+
+        g.conn.execute(cmd, (name, phone, email, password))
+        return redirect('/')
+
+    else:
+        context = dict(register=True)
+        return render_template('index.html', **context)
 
 
 @app.route('/menu')
@@ -171,49 +190,54 @@ def display_feedback():
 @app.route('/orders/<uid>')
 def view_orders(uid):
 
-    cursor = g.conn.execute("""SELECT * FROM "Order_Delivery_Person" NATURAL JOIN
-                                (SELECT oid, date, delivery_address, status, type, number
-                                FROM "Order" NATURAL JOIN "Card" c
-                                WHERE cust_id=%s ORDER BY date DESC) AS "Order" """, (uid,))
-    orders = []
-    for result in cursor:
-        order = {}
-        order['oid'] = result['oid']
-        order['date'] = result['date']
-        order['address'] = result['delivery_address']
-        order['status'] = result['status']
-        order['card_details'] = {
-            'type': result['type'],
-            'number': 'XXXX-XXXX-XXXX-'+str(result['number'])[12:]
-        }
-        order_cursor = g.conn.execute("""SELECT name, price, quantity, price*quantity AS item_total
-                                            FROM "Order_Item" NATURAL JOIN "Item" WHERE oid=%s;""", (result['oid'], ))
-        order_subtotal = 0.0
-        order['item_details'] = []
+    if session['uid'] == int(uid):
 
-        for item in order_cursor:
-            item_details = {}
-            item_details['name'] = item['name']
-            item_details['price'] = item['price']
-            item_details['quantity'] = item['quantity']
-            item_details['item_total'] = item['item_total']
-            order['item_details'].append(item_details)
-            order_subtotal += float(item['item_total'])
+        cursor = g.conn.execute("""SELECT * FROM "Order_Delivery_Person" NATURAL JOIN
+                                    (SELECT oid, date, delivery_address, status, type, number
+                                    FROM "Order" NATURAL JOIN "Card" c
+                                    WHERE cust_id=%s ORDER BY date DESC) AS "Order" """, (uid,))
+        orders = []
+        for result in cursor:
+            order = {}
+            order['oid'] = result['oid']
+            order['date'] = result['date']
+            order['address'] = result['delivery_address']
+            order['status'] = result['status']
+            order['card_details'] = {
+                'type': result['type'],
+                'number': 'XXXX-XXXX-XXXX-'+str(result['number'])[12:]
+            }
+            order_cursor = g.conn.execute("""SELECT name, price, quantity, price*quantity AS item_total
+                                                FROM "Order_Item" NATURAL JOIN "Item" WHERE oid=%s;""", (result['oid'], ))
+            order_subtotal = 0.0
+            order['item_details'] = []
 
-        order['subtotal'] = order_subtotal
-        order['tip'] = result['tip']
-        order['tax'] = float('%.2f' % (0.1*order_subtotal))
-        order['delivery_fee'] = 5.0
-        order['total'] = order_subtotal + float(order['tip']) + order['tax'] + order['delivery_fee']
+            for item in order_cursor:
+                item_details = {}
+                item_details['name'] = item['name']
+                item_details['price'] = item['price']
+                item_details['quantity'] = item['quantity']
+                item_details['item_total'] = item['item_total']
+                order['item_details'].append(item_details)
+                order_subtotal += float(item['item_total'])
 
-        order_cursor = g.conn.execute("""SELECT name FROM "Person" WHERE pid=%s;""", (result['did'],))
-        order['delivery_person'] = order_cursor.first()['name']
+            order['subtotal'] = order_subtotal
+            order['tip'] = result['tip']
+            order['tax'] = float('%.2f' % (0.1*order_subtotal))
+            order['delivery_fee'] = 5.0
+            order['total'] = order_subtotal + float(order['tip']) + order['tax'] + order['delivery_fee']
 
-        orders.append(order)
-        order_cursor.close()
+            order_cursor = g.conn.execute("""SELECT name FROM "Person" WHERE pid=%s;""", (result['did'],))
+            order['delivery_person'] = order_cursor.first()['name']
 
-    context = dict(orders=orders)
-    cursor.close()
+            orders.append(order)
+            order_cursor.close()
+
+        context = dict(orders=orders)
+        cursor.close()
+
+    else:
+        context = dict(authentication_error='Invalid request')
 
     return render_template("orders.html", **context)
 
