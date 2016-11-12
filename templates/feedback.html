@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Food Reviews</title>
+    <style>
+        .subheading{
+          font-size: 12pt;
+          color: gray;
+        }
+    </style>
+    <link rel="stylesheet" href="{{url_for('static', filename='font-awesome-4.7.0/css/font-awesome.min.css')}}">
+</head>
+<body>
+
+    <h1 align="center">Reviews  <i class="fa fa-plus-square"></i></h1>
+    <p align="center">
+        <img src= {{url_for('static', filename = 'images/star.png')}} height="20" width="20">{{avgRating}}
+    </p>
+    <table>
+        {% for review in feedback %}
+            <tr><td colspan="3">{{review['review']}}</td></tr>
+            <tr class="subheading">
+                <td>{{review['reviewer']}}</td>
+                <td><img src= {{url_for('static', filename = 'images/star.png')}} height="20" width="20">
+                    {{review['rating']}}</td>
+                <td>{{review['date']}}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>

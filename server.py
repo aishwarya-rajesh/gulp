@@ -150,6 +150,26 @@ def display_menu():
     return render_template("menu.html", **context)
 
 
+@app.route('/reviews')
+def display_feedback():
+
+    cursor = g.conn.execute("""SELECT * FROM "Feedback" NATURAL JOIN "Person" WHERE NOT review='';""")
+    feedback = []
+    for result in cursor:
+        review = {}
+        review['review'] = result['review']
+        review['rating'] = result['rating']
+        review['reviewer'] = result['name']
+        review['date'] = result['date']
+        feedback.append(review)
+
+    cursor = g.conn.execute('SELECT AVG(rating) FROM "Feedback"')
+    context = dict(feedback=feedback, avgRating='%.2f' % cursor.first()[0])
+    cursor.close()
+
+    return render_template("feedback.html", **context)
+
+
 if __name__ == "__main__":
     import click
 
