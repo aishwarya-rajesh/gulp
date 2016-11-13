@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Wallet</title>
+</head>
+<body>
+    {% block content %}
+    {% if cards %}
+    <h1 align="center">Your Cards</h1>
+
+    <table class="table table-bordered">
+        <tr>
+            <th>Card Type</th>
+            <th>Card Number</th>
+            <th>Name on Card</th>
+            <th>Card Zip Code</th>
+        </tr>
+        {% for card in cards['Card'] %}
+            <tr>
+                <td>{{card.type}}</td>
+                <td>{{card.number}}</td>
+                <td>{{card.name}}</td>
+                <td>{{card.zipcode}}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    {% endblock %}
+</body>
+</html> 

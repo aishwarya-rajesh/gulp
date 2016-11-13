@@ -138,6 +138,44 @@ def register():
         return render_template('index.html', **context)
 
 
+@app.route('/card', methods=['POST','GET'])
+def add_card():
+
+    if request.method == 'POST':
+        card_type = request.form['type']
+        card_name = request.forn['name']
+        card_number = request.form['number']
+        card_zipcode = request.form['zipcode']
+        userid = session['uid']
+
+        cmd = """
+        INSERT INTO "Card" (number, name, type, zipcode, pid) values (%s, %s, %s, %s, %s);
+        """
+
+        g.conn.execute(cmd, (card_number, card_name, card_type, card_zipcode, userid))
+        return redirect('/')
+    else:
+        print "Here"
+        userid = session['uid']
+        print "Userid:%s" %userid
+        cursor = g.conn().execute('SELECT * FROM "Card" where pid = %s;', (userid,))
+        print "Executed"
+        cards = OrderedDict([
+        ('Card', [])
+        ])
+        for result in cursor:
+            card_item = {}
+            print "Query executed"
+            card_item['name'] = result['name']	
+            card_item['number'] = result['number']
+            card_item['type'] = result['type']
+            card_item['zipcode'] = result['zipcode']
+            cards['Card'].append(card_item)
+
+        context = dict(cards=cards)
+        return render_template("cards.html", **context)
+
+
 @app.route('/menu')
 def display_menu():
 
@@ -186,7 +224,6 @@ def display_feedback():
     cursor.close()
 
     return render_template("feedback.html", **context)
-
 
 @app.route('/orders/<uid>')
 def view_orders(uid):
