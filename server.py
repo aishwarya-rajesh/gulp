@@ -75,6 +75,7 @@ def index():
 @app.route('/login', methods=['POST', 'GET'])
 def login():
 
+    session['cartitems'] = [];
     if request.method == 'POST':
         email = '' if request.form['email'] is None else request.form['email']
         password = '' if request.form['password'] is None else request.form['password']
@@ -155,11 +156,8 @@ def add_card():
         g.conn.execute(cmd, (card_number, card_name, card_type, card_zipcode, userid))
         return redirect('/')
     else:
-        print "Here"
         userid = session['uid']
-        print "Userid:%s" %userid
-        cursor = g.conn().execute('SELECT * FROM "Card" where pid = %s;', (userid,))
-        print "Executed"
+        cursor = g.conn.execute("""SELECT * FROM "Card" where pid = %s;""", (userid,))
         cards = OrderedDict([
         ('Card', [])
         ])
@@ -173,8 +171,39 @@ def add_card():
             cards['Card'].append(card_item)
 
         context = dict(cards=cards)
-        return render_template("cards.html", **context)
+        return render_template('cards.html', **context)
 
+
+@app.route('/addtocart/<itemid>')
+def add_to_cart(itemid):
+    for cartitem in session['cartitems']:
+        if cartitem['id'] == itemid:
+            cartitem['qty'] = cartitem['qty'] + 1
+            cartitem['totalprice'] = cartitem['totalprice'] + cartitem['price']
+            return display_menu()
+    cursor = g.conn.execute("""SELECT * from "Item" where item_id = %s""", (itemid,))
+    cartitem = {}
+    for result in cursor:
+        cartitem['name'] = result['name']
+        cartitem['price'] = result['price']
+        cartitem['totalprice'] = result['price'] 
+    cartitem['id'] = itemid
+    cartitem['qty'] = 1
+    session['cartitems'].append(cartitem);
+    return display_menu()
+    
+
+@app.route('/showcart')
+def show_cart():
+    cart = OrderedDict([
+        ('CartItems', session['cartitems'])
+        ])
+    total = 0
+    for cartitem in session['cartitems']:
+        total = total + cartitem['totalprice']
+
+    context = dict(citems = cart, delivery_fee = 5, total = total + 5)
+    return render_template('cart.html', **context);
 
 @app.route('/menu')
 def display_menu():
@@ -195,6 +224,7 @@ def display_menu():
     ])
     for result in cursor:
         item = {}
+        item['id'] = result['item_id']
         item['name'] = result['name']
         item['desc'] = result['description']
         item['price'] = result['price']

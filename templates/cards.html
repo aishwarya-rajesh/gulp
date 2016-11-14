@@ -7,7 +7,7 @@
 <body>
     {% block content %}
     {% if cards %}
-    <h1 align="center">Your Cards</h1>
+    <h1 align="center">My Cards</h1>
 
     <table class="table table-bordered">
         <tr>
@@ -25,6 +25,7 @@
             </tr>
         {% endfor %}
     </table>
+    {% endif %}
     {% endblock %}
 </body>
 </html> 
