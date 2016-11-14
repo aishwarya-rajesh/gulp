@@ -26,6 +26,16 @@
         {% endfor %}
     </table>
     {% endif %}
+
+<h1 align="center">My Cards</h1>
+<form method="POST" action="/register">
+          Type: <input type="text" name="type"><br>
+          Number: <input type="text" name="number"><br>
+          Name on Card: <input type="text" name="name"><br>
+          Zipcode: <input type="text" name="zipcode"><br>
+          <input type="submit" value="Add Card">
+</form>
+
     {% endblock %}
 </body>
 </html> 

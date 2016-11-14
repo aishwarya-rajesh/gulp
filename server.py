@@ -121,17 +121,18 @@ def register():
         if cursor.first():
             return redirect('/')
 
-        cmd = """
-            WITH new_person AS (
+        cmd1 = """
                 INSERT INTO "Person" (name) VALUES (%s)
-                RETURNING pid
-            )
-            INSERT INTO "Customer" (
+                RETURNING pid;"""
+        cmd2 = """INSERT INTO "Customer" (
                 pid, phone, email, password
-            ) VALUES ((SELECT pid from new_person), %s, %s, %s);
+            ) VALUES (%s, %s, %s, %s);
         """
 
-        g.conn.execute(cmd, (name, phone, email, password))
+        cursor = g.conn.execute(cmd1, (name))
+        name = cursor.first()[0]
+        print name
+        g.conn.execute(cmd2, (name,phone,email,password))
         return redirect('/')
 
     else:
@@ -139,39 +140,39 @@ def register():
         return render_template('index.html', **context)
 
 
-@app.route('/card', methods=['POST','GET'])
-def add_card():
+@app.route('/card/<total>', methods=['POST','GET'])
+def add_card(total):
 
-    if request.method == 'POST':
-        card_type = request.form['type']
-        card_name = request.forn['name']
-        card_number = request.form['number']
-        card_zipcode = request.form['zipcode']
-        userid = session['uid']
+        if request.method == 'POST':
+            card_type = request.form['type']
+            card_name = request.forn['name']
+            card_number = request.form['number']
+            card_zipcode = request.form['zipcode']
+            userid = session['uid']
 
-        cmd = """
-        INSERT INTO "Card" (number, name, type, zipcode, pid) values (%s, %s, %s, %s, %s);
-        """
+            cmd = """
+            INSERT INTO "Card"  values (number, name, type, zipcode, pid) values (%s, %s, %s, %s, %s);
+            """
 
-        g.conn.execute(cmd, (card_number, card_name, card_type, card_zipcode, userid))
-        return redirect('/')
-    else:
-        userid = session['uid']
-        cursor = g.conn.execute("""SELECT * FROM "Card" where pid = %s;""", (userid,))
-        cards = OrderedDict([
-        ('Card', [])
-        ])
-        for result in cursor:
-            card_item = {}
-            print "Query executed"
-            card_item['name'] = result['name']	
-            card_item['number'] = result['number']
-            card_item['type'] = result['type']
-            card_item['zipcode'] = result['zipcode']
-            cards['Card'].append(card_item)
+            g.conn.execute(cmd, (card_number, card_name, card_type, card_zipcode, userid))
+            return redirect('/')
+        else:
+            userid = session['uid']
+            cursor = g.conn.execute("""SELECT * FROM "Card" where pid = %s;""", (userid,))
+            cards = OrderedDict([
+            ('Card', [])
+            ])
+            for result in cursor:
+                card_item = {}
+                print "Query executed"
+                card_item['name'] = result['name']	
+                card_item['number'] = result['number']
+                card_item['type'] = result['type']
+                card_item['zipcode'] = result['zipcode']
+                cards['Card'].append(card_item)
 
-        context = dict(cards=cards)
-        return render_template('cards.html', **context)
+            context = dict(cards=cards)
+            return render_template('cards.html', **context)
 
 
 @app.route('/addtocart/<itemid>')
