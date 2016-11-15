@@ -6,47 +6,53 @@
 </head>
 <body>
     {% block content %}
-    {% if cards %}
-    <h1 align="center">My Cards</h1>
+        {% if addcard %}
+            <h1 align="center">Add Card</h1>
+                <form method="POST" action="/cards/{{session.uid}}">
+                    Type: <input type="text" name="type"><br>
+                    Number: <input type="text" name="number"><br>
+                    Name on Card: <input type="text" name="name"><br>
+                    Zipcode: <input type="text" name="zipcode"><br>
+                    <input type="submit" value="Add Card">
+                </form>
+        {% elif cards or payment %}
+            <h1 align="center">My Cards <a href="/cards/add"><i class="fa fa-plus-square"></i></a></h1>
 
-    <table class="table table-bordered">
-        <tr>
-            <th>Card Type</th>
-            <th>Card Number</th>
-            <th>Name on Card</th>
-            <th>Card Zip Code</th>
-            {% if total != 0 %}
-            <th>Pick One</th>
+            <table class="table table-bordered">
+                <tr>
+                    <th>Card Type</th>
+                    <th>Card Number</th>
+                    <th>Name on Card</th>
+                    <th>Card Zip Code</th>
+                    <th>
+                        {% if payment %}
+                            Pick One
+                        {% endif %}
+                    </th>
+                </tr>
+                {% for card in cards['Card'] %}
+                    <tr>
+                        <td>{{card.type}}</td>
+                        <td>{{card.number}}</td>
+                        <td>{{card.name}}</td>
+                        <td>{{card.zipcode}}</td>
+                        <td>
+                            {% if payment %}
+                                <a href="/selectcard/{{card.id}}">Select Card</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+            {% if payment %}
+                <form method="POST" action="/confirm">
+                    Delivery Address: <input type="text" name="address"><br>
+                    Tip: <input type="text" name="tip"><br>
+                    <input type="submit" value="Confirm Payment"><br>
+                </form>
             {% endif %}
-        </tr>
-        {% for card in cards['Card'] %}
-            <tr>
-                <td>{{card.type}}</td>
-                <td>{{card.number}}</td>
-                <td>{{card.name}}</td>
-                <td>{{card.zipcode}}</td>
-                {% if total != 0 %}
-                <td><a href="/selectcard/{{card.id}}">Select Card</td>
-                {% endif %}
-            </tr>
-        {% endfor %}
-    </table>
-    {% endif %}
-    
+        {% endif %}
 
-<h1 align="center">Add a New Card</h1>
-<form method="POST" action="/card/{{total}}">
-          Type: <input type="text" name="type"><br>
-          Number: <input type="text" name="number"><br>
-          Name on Card: <input type="text" name="name"><br>
-          Zipcode: <input type="text" name="zipcode"><br>
-          <input type="submit" value="Add Card">
-</form>
-<form method="POST" action="/confirm">
-          Delivery Address: <input type="text" name="address"><br>
-          Tip: <input type="text" name="tip"><br>
-          <input type="submit" value="Confirm Payment"><br>
-</form>
-{% endblock %}
+    {% endblock %}
 </body>
-</html> 
+</html>

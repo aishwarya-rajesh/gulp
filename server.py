@@ -141,39 +141,52 @@ def register():
         return render_template('index.html', **context)
 
 
-@app.route('/card/<total>', methods=['POST','GET'])
-def add_card(total):
+def get_cards(userid, context):
+    cursor = g.conn.execute("""SELECT * FROM "Card" where pid = %s;""", (userid,))
+    cards = OrderedDict([
+        ('Card', [])
+    ])
+    for result in cursor:
+        card_item = {}
+        print "Query executed"
+        card_item['id'] = result['card_id']
+        card_item['name'] = result['name']
+        card_item['number'] = result['number']
+        card_item['type'] = result['type']
+        card_item['zipcode'] = result['zipcode']
+        cards['Card'].append(card_item)
+
+    context['cards'] = cards
+    return render_template('cards.html', **context)
+
+
+@app.route('/cards/<option>', methods=['POST', 'GET'])
+def add_card(option):
 
         if request.method == 'POST':
             card_type = request.form['type']
             card_name = request.form['name']
             card_number = request.form['number']
             card_zipcode = request.form['zipcode']
-            userid = session['uid']
+            userid = option
 
             cmd = """
-            INSERT INTO "Card"(number, name, type, zipcode, pid) values (%s, %s, %s, %s, %s);
+            INSERT INTO "Card"(number, name, type, zipcode, pid) VALUES (%s, %s, %s, %s, %s);
             """
 
-            g.conn.execute(cmd, (card_number, card_name, card_type, card_zipcode, userid))
-            return
-        else:
-            userid = session['uid']
-            cursor = g.conn.execute("""SELECT * FROM "Card" where pid = %s;""", (userid,))
-            cards = OrderedDict([
-            ('Card', [])
-            ])
-            for result in cursor:
-                card_item = {}
-                card_item['id'] = result['card_id']
-                card_item['name'] = result['name']	
-                card_item['number'] = result['number']
-                card_item['type'] = result['type']
-                card_item['zipcode'] = result['zipcode']
-                cards['Card'].append(card_item)
+            g.conn.execute(cmd, (card_number, card_name, card_type, card_zipcode, userid, ))
+            return get_cards(userid, dict())
 
-            context = dict(cards=cards, total = total)
-            return render_template('cards.html', **context)
+        else:
+            if str(option) == 'add':  # Add new card
+                context = dict(addcard=True)
+                return render_template("cards.html", **context)
+            elif str(option) == 'payment-options':  # Retrieve payment options
+                userid = session['uid']
+                return get_cards(userid, dict(payment=True))
+
+            userid = option
+            return get_cards(userid, dict())
 
 
 @app.route('/addtocart/<itemid>')
