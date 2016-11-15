@@ -14,6 +14,7 @@ import os
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect, session, Response
+from datetime import datetime
 
 from collections import OrderedDict
 
@@ -145,17 +146,17 @@ def add_card(total):
 
         if request.method == 'POST':
             card_type = request.form['type']
-            card_name = request.forn['name']
+            card_name = request.form['name']
             card_number = request.form['number']
             card_zipcode = request.form['zipcode']
             userid = session['uid']
 
             cmd = """
-            INSERT INTO "Card"  values (number, name, type, zipcode, pid) values (%s, %s, %s, %s, %s);
+            INSERT INTO "Card"(number, name, type, zipcode, pid) values (%s, %s, %s, %s, %s);
             """
 
             g.conn.execute(cmd, (card_number, card_name, card_type, card_zipcode, userid))
-            return redirect('/')
+            return
         else:
             userid = session['uid']
             cursor = g.conn.execute("""SELECT * FROM "Card" where pid = %s;""", (userid,))
@@ -164,14 +165,14 @@ def add_card(total):
             ])
             for result in cursor:
                 card_item = {}
-                print "Query executed"
+                card_item['id'] = result['card_id']
                 card_item['name'] = result['name']	
                 card_item['number'] = result['number']
                 card_item['type'] = result['type']
                 card_item['zipcode'] = result['zipcode']
                 cards['Card'].append(card_item)
 
-            context = dict(cards=cards)
+            context = dict(cards=cards, total = total)
             return render_template('cards.html', **context)
 
 
@@ -192,7 +193,29 @@ def add_to_cart(itemid):
     cartitem['qty'] = 1
     session['cartitems'].append(cartitem);
     return display_menu()
-    
+
+
+@app.route('/selectcard/<cardid>')
+def select_card(cardid):
+    session['selected_card'] = cardid
+    return 
+
+
+@app.route('/confirm')
+def confirm_order():
+    dt = datetime.now()
+    cmd1 = """INSERT INTO "Order" (delivery_address, date, card_id, cust_id) VALUES (%s, %s, %s, %s)
+            RETURNING oid;"""
+       
+    cursor = g.conn.execute(cmd1, (request.form['address'], dt, session['selected_card'], session['uid']))
+    orderid = cursor.first()[0]
+
+    cmd2 = """INSERT INTO "Order" (oid, item_id, quantity) VALUES (%s, %s, %s);"""
+    for cartitem in session['cartitems']:
+        g.conn.execute(cmd2, (orderid, cartitem['id'], cartitem['qty']))
+
+    return redirect('/')
+
 
 @app.route('/showcart')
 def show_cart():
