@@ -16,7 +16,8 @@
                     <input type="submit" value="Add Card">
                 </form>
         {% elif cards or payment %}
-            <h1 align="center">My Cards <a href="/cards/add"><i class="fa fa-plus-square"></i></a></h1>
+            <h1 align="center">My Cards {% if not payment %}<a href="/cards/add"><i class="fa fa-plus-square"></i></a>
+            {% endif %}</h1>
 
             <table class="table table-bordered">
                 <tr>

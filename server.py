@@ -211,7 +211,7 @@ def add_to_cart(itemid):
 @app.route('/selectcard/<cardid>')
 def select_card(cardid):
     session['selected_card'] = cardid
-    return 
+    return get_cards(session['uid'], dict(payment=True))
 
 
 @app.route('/confirm')
