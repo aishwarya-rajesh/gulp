@@ -11,6 +11,7 @@ Read about it online.
 """
 
 import os
+from random import randint
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect, session, Response
@@ -132,7 +133,6 @@ def register():
 
         cursor = g.conn.execute(cmd1, (name))
         name = cursor.first()[0]
-        print name
         g.conn.execute(cmd2, (name,phone,email,password))
         return redirect('/')
 
@@ -148,7 +148,6 @@ def get_cards(userid, context):
     ])
     for result in cursor:
         card_item = {}
-        print "Query executed"
         card_item['id'] = result['card_id']
         card_item['name'] = result['name']
         card_item['number'] = result['number']
@@ -214,20 +213,35 @@ def select_card(cardid):
     return get_cards(session['uid'], dict(payment=True))
 
 
-@app.route('/confirm')
+@app.route('/confirm', methods=['POST'])
 def confirm_order():
     dt = datetime.now()
-    cmd1 = """INSERT INTO "Order" (delivery_address, date, card_id, cust_id) VALUES (%s, %s, %s, %s)
+    cmd1 = """INSERT INTO "Order" (delivery_address, date, card_id, cust_id, status) VALUES (%s, %s, %s, %s, %s)
             RETURNING oid;"""
        
-    cursor = g.conn.execute(cmd1, (request.form['address'], dt, session['selected_card'], session['uid']))
+    cursor = g.conn.execute(cmd1, (request.form['address'], dt, session['selected_card'], session['uid'], "In Progress"))
     orderid = cursor.first()[0]
 
-    cmd2 = """INSERT INTO "Order" (oid, item_id, quantity) VALUES (%s, %s, %s);"""
+    cmd2 = """INSERT INTO "Order_Item" (oid, item_id, quantity) VALUES (%s, %s, %s);"""
     for cartitem in session['cartitems']:
         g.conn.execute(cmd2, (orderid, cartitem['id'], cartitem['qty']))
 
-    return redirect('/')
+    delivery_index = randint(0,9)
+    i = 0
+    did = ""
+    cmd_select = """SELECT * from "Delivery_Person";"""
+    cursor = g.conn.execute(cmd_select)
+    for result in cursor:
+        if i == delivery_index:
+            break
+        else:
+            did = result['pid']
+
+    cmd3 = """INSERT INTO "Order_Delivery_Person" (oid, did, tip) VALUES (%s, %s, %s);"""
+    g.conn.execute(cmd3, (orderid, did, request.form['tip']))
+   
+    context = {}
+    return render_template('success.html', **context)
 
 
 @app.route('/showcart')
@@ -240,7 +254,7 @@ def show_cart():
         total = total + cartitem['totalprice']
 
     context = dict(citems = cart, delivery_fee = 5, total = total + 5)
-    return render_template('cart.html', **context);
+    return render_template('cart.html', **context)
 
 @app.route('/menu')
 def display_menu():
