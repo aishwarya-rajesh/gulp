@@ -191,34 +191,46 @@ def add_card(option):
 @app.route('/addtocart/<itemid>')
 def add_to_cart(itemid):
 
-    for cartitem in session['cartitems']:
-        if cartitem['id'] == itemid:
-            cartitem['qty'] += 1
-            cartitem['totalprice'] += cartitem['price']
-            session.modified = True
-            context = dict(add_success=True, itemname=cartitem['name'])
-            return display_menu(context)
+    if 'uid' in session:
+        for cartitem in session['cartitems']:
+            if cartitem['id'] == itemid:
+                cartitem['qty'] += 1
+                cartitem['totalprice'] += cartitem['price']
+                session.modified = True
+                context = dict(add_success=True, itemname=cartitem['name'])
+                return display_menu(context)
 
-    cursor = g.conn.execute("""SELECT * from "Item" where item_id = %s""", (itemid,))
-    cartitem = {}
+        cursor = g.conn.execute("""SELECT * from "Item" where item_id = %s""", (itemid,))
+        cartitem = {}
 
-    for result in cursor:
-        cartitem['name'] = result['name']
-        cartitem['price'] = result['price']
-        cartitem['totalprice'] = result['price'] 
-    cartitem['id'] = itemid
-    cartitem['qty'] = 1
+        for result in cursor:
+            cartitem['name'] = result['name']
+            cartitem['price'] = result['price']
+            cartitem['totalprice'] = result['price']
+        cartitem['id'] = itemid
+        cartitem['qty'] = 1
 
-    session['cartitems'].append(cartitem)
-    session.modified = True
-    context = dict(add_success=True, itemname=cartitem['name'])
+        session['cartitems'].append(cartitem)
+        session.modified = True
+        context = dict(add_success=True, itemname=cartitem['name'])
+
+    else:
+        context = dict(login_error=True)
+
     return display_menu(context)
-
 
 @app.route('/selectcard/<cardid>')
 def select_card(cardid):
     session['selected_card'] = cardid
     return get_cards(session['uid'], dict(payment=True))
+
+
+@app.route('/deletecard/<cardid>')
+def delete_card(cardid):
+    session['selected_card'] = cardid
+    cmd = """DELETE FROM "Card" WHERE card_id=%s"""
+    g.conn.execute(cmd, (cardid, ))
+    return get_cards(session['uid'], dict())
 
 
 @app.route('/confirm', methods=['POST'])
@@ -265,7 +277,7 @@ def show_cart():
     for cartitem in session['cartitems']:
         total = total + cartitem['totalprice']
 
-    context = dict(citems=cart, delivery_fee=5, total=total + 5)
+    context = dict(citems=cart, total=total, tax='%.2f' % (0.1*total))
     return render_template('cart.html', **context)
 
 
@@ -326,7 +338,7 @@ def view_orders(uid):
     if session['uid'] == int(uid):
 
         cursor = g.conn.execute("""SELECT * FROM "Order_Delivery_Person" NATURAL JOIN
-                                    (SELECT oid, date, delivery_address, status, type, number
+                                    (SELECT oid, date, delivery_address, status, type, number, card_id
                                     FROM "Order" NATURAL JOIN "Card"
                                     WHERE cust_id=%s ORDER BY date DESC) AS "Order" """, (uid,))
         orders = []
@@ -339,7 +351,7 @@ def view_orders(uid):
             order['card_details'] = {
                 'type': result['type'],
                 'number': 'XXXX-XXXX-XXXX-'+str(result['number'])[12:]
-            }
+            } if int(result['card_id']) != 25 else None
             order_cursor = g.conn.execute("""SELECT name, price, quantity, price*quantity AS item_total
                                                 FROM "Order_Item" NATURAL JOIN "Item" WHERE oid=%s;""", (result['oid'], ))
             order_subtotal = 0.0

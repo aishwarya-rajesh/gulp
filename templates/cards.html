@@ -8,16 +8,45 @@
     {% block content %}
         {% if addcard %}
             <h1 align="center">Add Card</h1>
+            <div class="col-md-2 col-md-offset-5">
                 <form method="POST" action="/cards/{{session.uid}}">
-                    Type: <input type="text" name="type"><br>
-                    Number: <input type="text" name="number"><br>
-                    Name on Card: <input type="text" name="name"><br>
-                    Zipcode: <input type="text" name="zipcode"><br>
-                    <input type="submit" value="Add Card">
+                    <div class="form-group">
+                        <label class="cols-sm-2 control-label">Type</label>
+                        <div class="cols-sm-10">
+                           <input type="text" class="form-control" name="type" placeholder="MasterCard, Visa or AmEx"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="cols-sm-2 control-label">Card Number</label>
+                        <div class="cols-sm-10">
+                            <input type="text" class="form-control" name="number"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="cols-sm-2 control-label">Name on Card</label>
+                        <div class="cols-sm-10">
+                            <input type="text" class="form-control" name="name"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="cols-sm-2 control-label">Zip Code</label>
+                        <div class="cols-sm-10">
+                            <input type="text" class="form-control" name="zipcode"/>
+                        </div>
+                    </div>
+
+                    <div class="form-group" align="center">
+                        <input type="submit" class="btn btn-primary btn-md" value="Add Card">
+                    </div>
+
                 </form>
+            </div>
         {% elif cards or payment %}
-            <h1 align="center">My Cards {% if not payment %}<a href="/cards/add"><i class="fa fa-plus-square"></i></a>
-            {% endif %}</h1>
+            {% if not payment %}
+                <h1 align="center">My Cards <a href="/cards/add"><i class="fa fa-plus-square"></i></a></h1>
+            {% else %}
+                <h3 align="center">Payment Options</h3>
+            {% endif %}
 
             <table class="table table-bordered">
                 <tr>
@@ -25,11 +54,7 @@
                     <th>Card Number</th>
                     <th>Name on Card</th>
                     <th>Card Zip Code</th>
-                    <th>
-                        {% if payment %}
-                            Pick One
-                        {% endif %}
-                    </th>
+                    <th></th>
                 </tr>
                 {% for card in cards['Card'] %}
                     <tr>
@@ -40,17 +65,35 @@
                         <td>
                             {% if payment %}
                                 <a href="/selectcard/{{card.id}}">Select Card</a>
+                            {% else %}
+                                <a href="/deletecard/{{card.id}}">Delete Card</a>
                             {% endif %}
                         </td>
                     </tr>
                 {% endfor %}
             </table>
             {% if payment %}
-                <form method="POST" action="/confirm">
-                    Delivery Address: <input type="text" name="address"><br>
-                    Tip: <input type="text" name="tip"><br>
-                    <input type="submit" value="Confirm Payment"><br>
-                </form>
+                <div class="col-md-4 col-md-offset-4">
+                    <form method="POST" action="/confirm" align="center">
+                        <div class="form-group">
+                            <label class="cols-sm-2 control-label">Delivery Address</label>
+                            <div class="cols-sm-10">
+                                <input type="text" class="form-control" name="address"/>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="cols-sm-2 control-label">Tip</label>
+                            <div class="cols-sm-10">
+                                <input type="text" class="form-control" name="tip"/>
+                            </div>
+                        </div>
+                        * A delivery fee of $5.00 will be charged additionally.
+                        <div class="form-group ">
+                            <input type="submit" class="btn btn-success btn-md" value="Confirm Payment and Place Order">
+                        </div>
+                    </form>
+                </div>
             {% endif %}
         {% endif %}
 

@@ -24,9 +24,9 @@
             </tr>
             {% endfor %}
             </table>
-            <h4 align="center">Delivery Fee: {{delivery_fee}}</h4><br>
-            <h3 align="center">Total: {{total}}</h3><br><br>
-            <h3 align="center"><a href="/cards/payment-options">Proceed to Payment</a></h3>
+            <h3 align="center">Order Subtotal: {{total}}</h3><br>
+            <h3 align="center">Tax: {{tax}}</h3><br><br>
+            <h3 align="center"><a href="/cards/payment-options">Proceed to Checkout</a></h3>
         {% else %}
             <h2 align="center">No items in cart</h2>
         {% endif %}

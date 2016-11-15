@@ -14,7 +14,7 @@
             <th>Status</th>
             <th>Date</th>
             <th>Delivery</th>
-        <th>Card Details</th>
+            <th>Card Details</th>
             <th>Order Details</th>
             <th>Subtotal</th>
             <th>Other Charges</th>
@@ -30,8 +30,12 @@
                     Delivered by: {{order.delivery_person}}
                 </td>
                 <td>
-                    {{order.card_details.type}}<br>
-                    {{order.card_details.number}}
+                    {% if order.card_details %}
+                        {{order.card_details.type}}<br>
+                        {{order.card_details.number}}
+                    {% else %}
+                        Card details not available
+                    {% endif %}
                 </td>
                 <td>
                     <table>
