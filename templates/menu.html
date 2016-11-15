@@ -6,17 +6,20 @@
 </head>
 <body>
     {% block content %}
+        {% if add_success %}
+            <h6 align="center">{{itemname}} has been successfully added to your cart.</h6>
+        {% endif %}
         <h1 align="center">Menu</h1>
         <table class="table table-hover">
             {% for category, items in menu.items() %}
-                <tr class="success"><td colspan="2"><h2>{{category}}</h2></td></tr>
+                <tr class="success"><td colspan="3"><h2>{{category}}</h2></td></tr>
                 {% for item in items %}
                     <tr>
                         <td><h3>{{item['name']}}</h3></td>
                         <td><h3>{{item['price']}}</h3></td>
                         <td><h3><a href="/addtocart/{{item['id']}}">Add to Cart</a></h3></td>
                     </tr>
-                    <tr><td colspan="2">{{item['desc']}}</td></tr>
+                    <tr><td colspan="3">{{item['desc']}}</td></tr>
                 {% endfor %}
             {% endfor %}
         </table>

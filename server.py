@@ -77,7 +77,6 @@ def index():
 @app.route('/login', methods=['POST', 'GET'])
 def login():
 
-    session['cartitems'] = [];
     if request.method == 'POST':
         email = '' if request.form['email'] is None else request.form['email']
         password = '' if request.form['password'] is None else request.form['password']
@@ -94,6 +93,7 @@ def login():
             else:
                 session['user'] = record[0]
                 session['uid'] = record[2]
+                session['cartitems'] = []
                 return redirect('/')
 
     else:
@@ -127,13 +127,13 @@ def register():
                 INSERT INTO "Person" (name) VALUES (%s)
                 RETURNING pid;"""
         cmd2 = """INSERT INTO "Customer" (
-                pid, phone, email, password
-            ) VALUES (%s, %s, %s, %s);
-        """
+                    pid, phone, email, password
+                ) VALUES (%s, %s, %s, %s);
+                """
 
-        cursor = g.conn.execute(cmd1, (name))
+        cursor = g.conn.execute(cmd1, (name, ))
         name = cursor.first()[0]
-        g.conn.execute(cmd2, (name,phone,email,password))
+        g.conn.execute(cmd2, (name, phone, email, password))
         return redirect('/')
 
     else:
@@ -190,21 +190,29 @@ def add_card(option):
 
 @app.route('/addtocart/<itemid>')
 def add_to_cart(itemid):
+
     for cartitem in session['cartitems']:
         if cartitem['id'] == itemid:
-            cartitem['qty'] = cartitem['qty'] + 1
-            cartitem['totalprice'] = cartitem['totalprice'] + cartitem['price']
-            return display_menu()
+            cartitem['qty'] += 1
+            cartitem['totalprice'] += cartitem['price']
+            session.modified = True
+            context = dict(add_success=True, itemname=cartitem['name'])
+            return display_menu(context)
+
     cursor = g.conn.execute("""SELECT * from "Item" where item_id = %s""", (itemid,))
     cartitem = {}
+
     for result in cursor:
         cartitem['name'] = result['name']
         cartitem['price'] = result['price']
         cartitem['totalprice'] = result['price'] 
     cartitem['id'] = itemid
     cartitem['qty'] = 1
-    session['cartitems'].append(cartitem);
-    return display_menu()
+
+    session['cartitems'].append(cartitem)
+    session.modified = True
+    context = dict(add_success=True, itemname=cartitem['name'])
+    return display_menu(context)
 
 
 @app.route('/selectcard/<cardid>')
@@ -239,6 +247,8 @@ def confirm_order():
 
     cmd3 = """INSERT INTO "Order_Delivery_Person" (oid, did, tip) VALUES (%s, %s, %s);"""
     g.conn.execute(cmd3, (orderid, did, request.form['tip']))
+
+    session['cartitems'] = []
    
     context = {}
     return render_template('success.html', **context)
@@ -246,18 +256,21 @@ def confirm_order():
 
 @app.route('/showcart')
 def show_cart():
+
     cart = OrderedDict([
         ('CartItems', session['cartitems'])
         ])
+
     total = 0
     for cartitem in session['cartitems']:
         total = total + cartitem['totalprice']
 
-    context = dict(citems = cart, delivery_fee = 5, total = total + 5)
+    context = dict(citems=cart, delivery_fee=5, total=total + 5)
     return render_template('cart.html', **context)
 
+
 @app.route('/menu')
-def display_menu():
+def display_menu(context=dict()):
 
     cursor = g.conn.execute('SELECT * FROM "Item";')
     menu_items = OrderedDict([
@@ -282,7 +295,7 @@ def display_menu():
         menu_items[result['category']].append(item)
     cursor.close()
 
-    context = dict(menu=menu_items)
+    context['menu'] = menu_items
 
     return render_template("menu.html", **context)
 
@@ -305,6 +318,7 @@ def display_feedback():
     cursor.close()
 
     return render_template("feedback.html", **context)
+
 
 @app.route('/orders/<uid>')
 def view_orders(uid):

@@ -6,30 +6,30 @@
 </head>
 <body>
     {% block content %}
-    {% if citems['CartItems'] %}
-    <h2 align="center">Cart Summary</h2><br>
-    <table class="table table-bordered">
-    <tr>
-     <th>Name</th>
-     <th>Quantity</th>
-     <th>Price</th>
-     <th>Total</th>
-    </tr>
- 	{% for cartitem in citems['CartItems'] %}
-     <tr>
-        <td>{{cartitem.name}}</td>
-        <td>{{cartitem.qty}}</td>
-        <td>{{cartitem.price}}</td>
-        <td>{{cartitem.totalprice}}</td>
-    </tr>
-    {% endfor %} 
-    </table>
-    <h4 align="center">Delivery Fee: {{delivery_fee}}</h4><br>
-    <h3 align="center">Total: {{total}}</h3><br><br>
-    <h3 align="center"><a href="/cards/payment-options">Proceed to Payment</a></h3>
-    {% else %}
-    <h2 align="center">No items in cart</h2>
-    {% endif %}
+        {% if citems['CartItems'] %}
+            <h2 align="center">Cart Summary</h2><br>
+            <table class="table table-bordered">
+            <tr>
+             <th>Name</th>
+             <th>Quantity</th>
+             <th>Price</th>
+             <th>Total</th>
+            </tr>
+            {% for cartitem in citems['CartItems'] %}
+             <tr>
+                <td>{{cartitem.name}}</td>
+                <td>{{cartitem.qty}}</td>
+                <td>{{cartitem.price}}</td>
+                <td>{{cartitem.totalprice}}</td>
+            </tr>
+            {% endfor %}
+            </table>
+            <h4 align="center">Delivery Fee: {{delivery_fee}}</h4><br>
+            <h3 align="center">Total: {{total}}</h3><br><br>
+            <h3 align="center"><a href="/cards/payment-options">Proceed to Payment</a></h3>
+        {% else %}
+            <h2 align="center">No items in cart</h2>
+        {% endif %}
     {% endblock %}
  </body>
 </html>
