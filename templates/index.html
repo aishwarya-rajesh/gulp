@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 <html>
-      <style>
+<head>
+    <style>
         body{
-          font-size: 15pt;
-          font-family: arial;
+            font-size: 15pt;
+            font-family: arial;
         }
         .form-group{
 	        margin-bottom: 15px;
         }
-        p{
-            color: red;
-        }
-      </style>
+
+    </style>
+</head>
 <body>
 
     {% block content %}
@@ -62,7 +62,7 @@
 
         {% elif register or error_email%}
 
-            <div class="container">
+		<div class="container">
 			<div>
 				<div class="panel-heading">
 	               <div class="panel-title text-center">
@@ -125,6 +125,33 @@
 			</div>
 		</div>
 
+		{% else %}
+            <div id="myCarousel" class="carousel slide" data-ride="carousel">
+                <div class="carousel-inner" role="listbox">
+                    <div class="item active">
+                        <img src="{{url_for('static', filename='images/image1.jpg')}}">
+                    </div>
+                    <div class="item">
+                        <img src="{{url_for('static', filename='images/image2.jpg')}}">
+                    </div>
+                    <div class="item">
+                        <img src="{{url_for('static', filename='images/image3.jpg')}}">
+                    </div>
+                </div>
+
+                <ol class="carousel-indicators">
+                    <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+                    <li data-target="#myCarousel" data-slide-to="1"></li>
+                    <li data-target="#myCarousel" data-slide-to="2"></li>
+                </ol>
+            </div>
+
+            <script>
+                $(document).ready(function(){
+                    // Activate Carousel
+                    $("#myCarousel").carousel({interval: 2000});
+                });
+            </script>
         {% endif %}
     {% endblock %}
 

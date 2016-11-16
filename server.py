@@ -205,8 +205,8 @@ def add_to_cart(itemid):
 
         for result in cursor:
             cartitem['name'] = result['name']
-            cartitem['price'] = result['price']
-            cartitem['totalprice'] = result['price']
+            cartitem['price'] = float(result['price'])
+            cartitem['totalprice'] = float(result['price'])
         cartitem['id'] = itemid
         cartitem['qty'] = 1
 
